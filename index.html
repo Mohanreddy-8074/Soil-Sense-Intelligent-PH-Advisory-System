@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Crop PH Advisory: Soil Intelligence System</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css" />
+  <style>
+    body {
+      background: linear-gradient(135deg, #e0f7fa, #e8f5e9, #fce4ec);
+    }
+    .navbar {
+      background-color: #004d40;
+    }
+    .navbar-nav .nav-link {
+      color: #fff;
+    }
+    .navbar-brand {
+      font-weight: bold;
+      color: #ffeb3b;
+    }
+    .section {
+      padding: 60px 20px;
+    }
+    .section.bg-light {
+      background: linear-gradient(to right, #f1f8e9, #e0f7fa);
+    }
+    .section.bg-dark {
+      background: linear-gradient(to right, #004d40, #00695c);
+      color: white;
+    }
+    .container {
+      max-width: 500px;
+      margin: 40px auto;
+      padding: 30px;
+      background-color: #ffffffcc;
+      border-radius: 12px;
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
+    }
+    .heading {
+      font-weight: bold;
+      color: #004d40;
+    }
+    #login-page, #ph-page, #about, #contact, #logs-section {
+      display: none;
+    }
+    .btn-custom {
+      width: 100%;
+    }
+    #home h1 {
+      font-size: 3rem;
+      font-weight: bold;
+      color: #004d40;
+      margin-bottom: 20px;
+    }
+    #home p {
+      font-size: 1.25rem;
+    }
+  </style>
+</head>
+<body>
+  <nav class="navbar navbar-expand-lg navbar-dark">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="#">Crop PH Advisory</a>
+      <div class="collapse navbar-collapse">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item"><a class="nav-link" href="#" onclick="showSection('about')">About</a></li>
+          <li class="nav-item"><a class="nav-link" href="#" onclick="showSection('contact')">Contact</a></li>
+          <li class="nav-item"><a class="nav-link" href="#" onclick="goToLogin()">Login/Register</a></li>
+          <li class="nav-item"><a class="nav-link" href="#" onclick="logout()">Logout</a></li>
+          <li class="nav-item" id="adminLogBtn" style="display: none;"><a class="nav-link" href="#" onclick="viewLogs()">View Logs</a></li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <section id="home" class="section text-center">
+    <div class="d-flex flex-column justify-content-center align-items-center" style="min-height: 80vh">
+      <h1>Welcome to Crop PH Advisory</h1>
+      <p>Your Soil Sense Intelligent AI-Crop Advisory System</p>
+      <button class="btn btn-primary mt-4" onclick="goToLogin()">Get Started</button>
+    </div>
+  </section>
+
+  <div id="login-page" class="container">
+    <h2 class="text-center heading">Login / Register</h2>
+    <div class="mb-3">
+      <label for="email" class="form-label">Email</label>
+      <input type="email" class="form-control" id="email" required />
+    </div>
+    <div class="mb-3">
+      <label for="password" class="form-label">Password</label>
+      <input type="password" class="form-control" id="password" required />
+    </div>
+    <button class="btn btn-success mb-2 btn-custom" onclick="login()">Login</button>
+    <button class="btn btn-outline-primary mb-3 btn-custom" onclick="register()">Register</button>
+    <p id="auth-error" class="text-danger"></p>
+  </div>
+
+  <section id="about" class="section bg-light">
+    <div class="container text-center">
+      <h2>About Soil pH Crop Advisory</h2>
+      <p>This system helps farmers and agricultural experts determine ideal crops based on soil pH levels. By entering your soil's pH, you receive crop suggestions and fertilizer advice tailored to that acidity.</p>
+      <button class="btn btn-primary mt-3" onclick="showSection('ph-page')">Next</button>
+    </div>
+  </section>
+
+  <div id="ph-page" class="container">
+    <h2 class="text-center heading">Soil pH & Fertilizer Advisor</h2>
+    <div class="mb-3">
+      <label for="ph-value" class="form-label">Enter Soil pH:</label>
+      <input type="number" step="0.1" id="ph-value" class="form-control" required />
+    </div>
+    <button class="btn btn-success mb-3 btn-custom" onclick="checkPH()">Check pH</button>
+    <div id="recommendations" class="text-dark"></div>
+  </div>
+
+  <div id="logs-section" class="container">
+    <h2 class="text-center heading">User Logs</h2>
+    <div id="log-output" class="mt-3"></div>
+  </div>
+
+  <script>
+    let users = JSON.parse(localStorage.getItem("users")) || {};
+    let logs = JSON.parse(localStorage.getItem("userLogs")) || [];
+    let idleTimer;
+
+    function resetIdleTimer() {
+      clearTimeout(idleTimer);
+      idleTimer = setTimeout(() => {
+        alert("You have been logged out due to inactivity.");
+        logout();
+      }, 2 * 60 * 1000);
+    }
+
+    document.onmousemove = resetIdleTimer;
+    document.onkeypress = resetIdleTimer;
+    document.onclick = resetIdleTimer;
+
+    function goToLogin() {
+      showSection("login-page");
+    }
+
+    function login() {
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
+
+      if (users[email] && users[email] === password) {
+        document.getElementById("auth-error").innerText = "";
+        showSection("about");
+
+        const loginTime = new Date().toLocaleString();
+        localStorage.setItem("loginTime", loginTime);
+        localStorage.setItem("currentUser", email);
+
+        if (email === "kreddymohan1927@gmail.com") {
+          localStorage.setItem("isAdmin", true);
+          document.getElementById("adminLogBtn").style.display = "block";
+        } else {
+          localStorage.setItem("isAdmin", false);
+          document.getElementById("adminLogBtn").style.display = "none";
+        }
+
+        logs.push({ user: email, login: loginTime, actions: [] });
+        localStorage.setItem("userLogs", JSON.stringify(logs));
+
+        resetIdleTimer();
+      } else {
+        document.getElementById("auth-error").innerText = "Invalid credentials.";
+      }
+    }
+
+    function register() {
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
+
+      if (!users[email]) {
+        users[email] = password;
+        localStorage.setItem("users", JSON.stringify(users));
+        document.getElementById("auth-error").innerText = "Registration successful. You can now log in.";
+      } else {
+        document.getElementById("auth-error").innerText = "User already exists.";
+      }
+    }
+
+    function checkPH() {
+      const ph = parseFloat(document.getElementById("ph-value").value);
+      const currentUser = localStorage.getItem("currentUser");
+
+      let crops = "";
+      let fertilizer = "";
+
+      if (ph < 6.0) {
+        crops = "Blueberries, Cranberries";
+        fertilizer = "Apply organic compost with sulfur-rich components.";
+      } else if (ph < 6.5) {
+        crops = "Potatoes, Carrots";
+        fertilizer = "Use cow manure and wood ash.";
+      } else if (ph < 7.0) {
+        crops = "Broccoli, Spinach";
+        fertilizer = "Use balanced vermicompost or compost tea.";
+      } else if (ph < 7.5) {
+        crops = "Corn, Soybeans";
+        fertilizer = "Use neem cake and green manure.";
+      } else {
+        crops = "Alfalfa, Clover";
+        fertilizer = "Apply seaweed extract and bone meal.";
+      }
+
+      const result = {
+        ph,
+        crops,
+        time: new Date().toLocaleString()
+      };
+
+      let history = JSON.parse(localStorage.getItem("phHistory")) || {};
+      if (!history[currentUser]) history[currentUser] = [];
+      history[currentUser].push(result);
+      localStorage.setItem("phHistory", JSON.stringify(history));
+
+      let logs = JSON.parse(localStorage.getItem("userLogs")) || [];
+      const index = logs.findIndex(l => l.user === currentUser && !l.logout);
+      if (index !== -1) logs[index].actions.push(result);
+      localStorage.setItem("userLogs", JSON.stringify(logs));
+
+      document.getElementById("recommendations").innerHTML = `
+        <h5>Recommended Crops:</h5>
+        <p>${crops}</p>
+        <h5>Fertilizer Suggestion:</h5>
+        <p>${fertilizer}</p>
+      `;
+    }
+
+    function logout() {
+      const currentUser = localStorage.getItem("currentUser");
+      const logoutTime = new Date().toLocaleString();
+
+      let logs = JSON.parse(localStorage.getItem("userLogs")) || [];
+      const index = logs.findIndex(l => l.user === currentUser && !l.logout);
+      if (index !== -1) logs[index].logout = logoutTime;
+      localStorage.setItem("userLogs", JSON.stringify(logs));
+
+      localStorage.removeItem("currentUser");
+      localStorage.removeItem("loginTime");
+      localStorage.removeItem("isAdmin");
+      document.getElementById("adminLogBtn").style.display = "none";
+      alert(`Logged out successfully.`);
+      showSection("home");
+    }
+
+    function viewLogs() {
+      const isAdmin = localStorage.getItem("isAdmin") === "true";
+      if (!isAdmin) {
+        alert("Only admin can access logs");
+        return;
+      }
+      const logs = JSON.parse(localStorage.getItem("userLogs")) || [];
+      let html = "";
+      logs.forEach(log => {
+        html += `<div class="border rounded p-3 mb-2">
+          <strong>User:</strong> ${log.user}<br />
+          <strong>Login:</strong> ${log.login}<br />
+          <strong>Logout:</strong> ${log.logout || "Still logged in"}<br />
+          <strong>pH Checks:</strong><ul>`;
+        log.actions.forEach(a => {
+          html += `<li>pH: ${a.ph}, Crops: ${a.crops}, Time: ${a.time}</li>`;
+        });
+        html += "</ul></div>";
+      });
+      document.getElementById("log-output").innerHTML = html;
+      showSection("logs-section");
+    }
+
+    function showSection(sectionId) {
+      ["home", "about", "contact", "login-page", "ph-page", "logs-section"].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.style.display = "none";
+      });
+      const el = document.getElementById(sectionId);
+      if (el) el.style.display = "block";
+    }
+  </script>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
